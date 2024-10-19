@@ -32,7 +32,7 @@ class ConversationController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse([
-            'conversationId' => $conversation->getId(),
+            'id' => $conversation->getId(),
             'createdAt' => $conversation->getCreatedAt()->format('Y-m-d H:i:s'),
         ]);
     }
