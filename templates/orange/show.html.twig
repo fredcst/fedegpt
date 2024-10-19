@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Orange{% endblock %}
+
+{% block body %}
+    <h1>Orange</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ orange.id }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ orange.type }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_orange_index') }}">back to list</a>
+
+    <a href="{{ path('app_orange_edit', {'id': orange.id}) }}">edit</a>
+
+    {{ include('orange/_delete_form.html.twig') }}
+{% endblock %}
