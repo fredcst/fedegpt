@@ -15,8 +15,12 @@ class Message
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\ManyToOne(inversedBy: 'messages')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Conversation $conversation = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $input = null;
@@ -24,11 +28,10 @@ class Message
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $output = null;
 
-    #[ORM\ManyToOne(inversedBy: 'messages')]
-    private ?Conversation $conversation = null;
-
-    public function __construct()
+    public function __construct(string $input, Conversation $conversation)
     {
+        $this->input = $input;
+        $this->conversation = $conversation;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -42,9 +45,21 @@ class Message
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getConversation(): ?Conversation
+    {
+        return $this->conversation;
+    }
+
+    public function setConversation(?Conversation $conversation): static
+    {
+        $this->conversation = $conversation;
 
         return $this;
     }
@@ -69,18 +84,6 @@ class Message
     public function setOutput(?string $output): static
     {
         $this->output = $output;
-
-        return $this;
-    }
-
-    public function getConversation(): ?Conversation
-    {
-        return $this->conversation;
-    }
-
-    public function setConversation(?Conversation $conversation): static
-    {
-        $this->conversation = $conversation;
 
         return $this;
     }

@@ -1,9 +1,9 @@
-<?php 
+<?php
 
+// src/Controller/MessageController.php
 namespace App\Controller;
 
 use App\Entity\Message;
-use App\Repository\ConversationRepository;
 use App\Repository\MessageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,7 +38,7 @@ class MessageController extends AbstractController
         return new JsonResponse(['success' => true, 'message' => 'Output updated successfully']);
     }
 
-    #[Route('/api/conversations/{conversationId}/messages', name: 'get_messages', methods: ['GET'])]
+    #[Route('/api/v2/conversations/{conversationId}/messages', name: 'get_messages', methods: ['GET'])]
     public function getMessages(int $conversationId, MessageRepository $messageRepository): JsonResponse
     {
         $messages = $messageRepository->findBy(['conversation' => $conversationId]);
@@ -48,23 +48,6 @@ class MessageController extends AbstractController
             $response[] = [
                 'input' => $message->getInput(),
                 'output' => $message->getOutput(),
-            ];
-        }
-
-        return new JsonResponse($response);
-    }
-    
-    #[Route('/api/conversations', name: 'get_conversations', methods: ['GET'])]
-    public function getConversations(ConversationRepository $conversationRepository): JsonResponse
-    {
-        $user = $this->getUser();
-        $conversations = $conversationRepository->findBy(['user' => $user]);
-
-        $response = [];
-        foreach ($conversations as $conversation) {
-            $response[] = [
-                'id' => $conversation->getId(),
-                'createdAt' => $conversation->getCreatedAt()->format('Y-m-d H:i:s'),
             ];
         }
 
