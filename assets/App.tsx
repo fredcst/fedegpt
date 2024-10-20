@@ -57,6 +57,8 @@ function Conversation() {
       if (response.data.id) {
         setConversations([...conversations, response.data]);
         setError(null); // Limpiar el error si la solicitud fue exitosa
+        setSelectedConversation(response.data);
+        loadMessages(response.data.id);
       } else {
         setError("Error creating conversation");
       }
