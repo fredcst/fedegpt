@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useQuery } from "react-query";
 
 // Definir las interfaces para las conversaciones y mensajes
 interface Conversation {
@@ -12,6 +13,12 @@ interface Message {
   output: string;
 }
 
+interface ConnectedUser {
+  name: string;
+  lastName: string;
+  uid: string;
+}
+
 function Conversation() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] =
@@ -21,8 +28,25 @@ function Conversation() {
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Cargar las conversaciones al iniciar el componente
+  const [connectedUser, setConnectedUser] = useState<ConnectedUser | null>(
+    null
+  );
+
   useEffect(() => {
+    const fetchConnectedUser = async () => {
+      try {
+        const response = await axios.get<ConnectedUser>("/api/me");
+        setConnectedUser({
+          name: response.data.name,
+          lastName: response.data.lastName,
+          uid: response.data.uid,
+        });
+        setError(null); // Limpiar el error si la solicitud fue exitosa
+      } catch (error) {
+        setError("Error fetching conversations"); // Guardar el error
+      }
+    };
+
     const fetchConversations = async () => {
       try {
         const response = await axios.get<Conversation[]>(
@@ -34,7 +58,7 @@ function Conversation() {
         setError("Error fetching conversations"); // Guardar el error
       }
     };
-
+    fetchConnectedUser();
     fetchConversations();
   }, []);
 
@@ -82,17 +106,19 @@ function Conversation() {
       const messageData = response.data;
       if (messageData.messageId) {
         // Hacer la consulta a la API externa
-        const externalResponse = await axios.get<{ title: string }>(
-          "https://jsonplaceholder.typicode.com/todos/" +
-            Math.floor(Math.random() * 100)
+        const externalResponse = await axios.post<{ title: string }>(
+          "https://dummyjson.com/posts/add",
+          {
+            title: input,
+            userId: 5,
+          }
         );
-        const title = externalResponse.data.title;
+        const title = "You have answered :" + externalResponse.data.title;
 
         // Actualizar la fila en Message con el title como output
         await axios.put(`/api/message/${messageData.messageId}/update-output`, {
           output: title,
         });
-
         // Actualizar la lista de mensajes con el nuevo mensaje
         setMessages([...messages, { input, output: title }]);
         setInput("");
@@ -128,6 +154,7 @@ function Conversation() {
           padding: "10px",
         }}
       >
+        <h2>Hello {connectedUser?.name} !</h2>
         <h3>Conversations</h3>
         <button onClick={createConversation}>Start New Conversation</button>
         <ul>
