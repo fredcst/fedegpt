@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useQuery } from "react-query";
+import GetUser from "./controllers/GetUser";
 
 // Definir las interfaces para las conversaciones y mensajes
 interface Conversation {
@@ -154,7 +155,9 @@ function Conversation() {
           padding: "10px",
         }}
       >
-        <h2>Hello {connectedUser?.name} !</h2>
+        {/* <h2>Hello {connectedUser?.name} !</h2> */}
+        <h2>Hello !</h2>
+        <GetUser />
         <h3>Conversations</h3>
         <button onClick={createConversation}>Start New Conversation</button>
         <ul>
