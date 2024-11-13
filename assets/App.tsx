@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useQuery } from "react-query";
-import ChatInput from "./components/ChatInput";
+import React, { useEffect, useState } from "react";
 import Chatbox from "./components/Chatbox";
+import ChatInput from "./components/ChatInput";
 import Sidebar from "./components/Sidebar";
-import { Conversation, Message, ConnectedUser } from "./Interfaces";
+import { ConnectedUser, Conversation, Message } from "./Interfaces";
 
 function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -34,19 +33,7 @@ function App() {
       }
     };
 
-    const fetchConversations = async () => {
-      try {
-        const response = await axios.get<Conversation[]>(
-          "/api/v2/conversations"
-        );
-        setConversations(response.data);
-        setError(null); // Limpiar el error si la solicitud fue exitosa
-      } catch (error) {
-        setError("Error fetching conversations"); // Guardar el error
-      }
-    };
     fetchConnectedUser();
-    fetchConversations();
   }, []);
 
   return (
@@ -56,23 +43,13 @@ function App() {
         setConversations={setConversations}
         selectedConversation={selectedConversation}
         setSelectedConversation={setSelectedConversation}
-        messages={messages}
         setMessages={setMessages}
       />
       <Chatbox
         messages={messages}
         selectedConversation={selectedConversation}
       />
-      <ChatInput
-        conversations={conversations}
-        setConversations={setConversations}
-        selectedConversation={selectedConversation}
-        setSelectedConversation={setSelectedConversation}
-        messages={messages}
-        setMessages={setMessages}
-        loading={loading}
-        setLoading={setLoading} // Fix: corrected the typo
-      />
+      <ChatInput selectedConversation={selectedConversation} />
       {/* Mostrar errores */}
       {error && (
         <div style={{ color: "red", marginTop: "20px" }}>

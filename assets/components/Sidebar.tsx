@@ -2,9 +2,9 @@ import React from "react";
 import GetUser from "./GetUser";
 import axios from "axios";
 import { Conversation, Message, ConnectedUser } from "../Interfaces";
+import useGetConversations from "../hooks/useGetConversations";
 
 interface Props {
-  messages: Message[];
   setMessages: (messages: Message[]) => void;
   conversations: Conversation[];
   setConversations: (conversations: Conversation[]) => void;
@@ -14,12 +14,13 @@ interface Props {
 
 const Sidebar = ({
   setMessages,
-  messages,
   conversations,
   setConversations,
   setSelectedConversation,
   selectedConversation,
 }: Props) => {
+  const { data } = useGetConversations();
+
   const loadMessages = (conversationId: number) => {
     axios
       .get<Message[]>(`/api/v2/conversations/${conversationId}/messages`)
@@ -72,7 +73,7 @@ const Sidebar = ({
       <h3>Conversations</h3>
       <button onClick={createConversation}>Start New Conversation</button>
       <ul>
-        {conversations.map((conversation) => (
+        {data?.map((conversation) => (
           <li key={conversation.id}>
             <span
               onClick={() => {

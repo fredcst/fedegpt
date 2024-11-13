@@ -1,5 +1,6 @@
 import React from "react";
 import { Conversation, Message, ConnectedUser } from "../Interfaces";
+import useMessages from "../hooks/useMessages";
 
 interface Props {
   messages: Message[];
@@ -7,6 +8,8 @@ interface Props {
 }
 
 const Chatbox = ({ messages, selectedConversation }: Props) => {
+  const { data, isLoading, isError } = useMessages(selectedConversation?.id);
+  if (isLoading && selectedConversation) return <p>Loading</p>;
   return (
     <div
       style={{
@@ -18,7 +21,7 @@ const Chatbox = ({ messages, selectedConversation }: Props) => {
       <h3>Messages</h3>
       {selectedConversation ? (
         <ul>
-          {messages.map((message, index) => (
+          {data?.map((message, index) => (
             <li key={index}>
               <strong>Input:</strong> {message.input}
               <br />

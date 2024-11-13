@@ -2,21 +2,31 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Message } from "../Interfaces";
 
-const fetchMessages = async (conversationId: number): Promise<Message[]> => {
-  const response = await axios.get(
-    `/api/v2/conversations/${conversationId}/messages`
-  );
-  return response.data;
+const useMessages = (conversationId: number | undefined) => {
+  const fetchMessages = async () => {
+    if (!conversationId) return [];
+    const res = await axios.get<Message[]>(
+      `/api/v2/conversations/${conversationId}/messages`
+    );
+    return res.data;
+  };
+
+  return useQuery<Message[]>({
+    queryKey: conversationId ? [conversationId, "messages"] : ["messages"],
+    queryFn: fetchMessages,
+  });
 };
 
-const useMessages = (conversationId: number | null) => {
-  return useQuery<Message[]>(
-    ["messages", conversationId],
-    () => (conversationId ? fetchMessages(conversationId) : []),
-    {
-      enabled: !!conversationId, // Only fetch if conversationId exists
-    }
-  );
-};
+// export default useMessages;
+
+// const useMessagesOld = (conversation: Conversation | null) => {
+//   return useQuery<Message[]>(
+//     ["messages", conversation?.id],
+//     () => (conversation?.id ? useMessages(conversation.id) : []),
+//     {
+//       enabled: !!conversation?.id, // Only fetch if conversationId exists
+//     }
+//   );
+// };
 
 export default useMessages;
