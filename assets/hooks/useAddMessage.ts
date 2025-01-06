@@ -1,16 +1,40 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Message } from "../Interfaces";
+import { Conversation, Message } from "../Interfaces";
+import { useConversations } from "./useConversations";
 
-const useAddMessage = (selectedConversation, input, onAdd: () => void) => {
+const useAddMessage = (
+  selectedConversation,
+  input,
+  onAdd: () => void,
+  setSelectedConversation: (conversation: Conversation) => void
+) => {
   const queryClient = useQueryClient();
+  const { createConversation } = useConversations();
 
-  return useMutation<{ messageId: number }, Error, Message>({
-    mutationFn: (message: Message) => {
+  const mutation = useMutation<{ messageId: number }, Error, Message>({
+    mutationFn: async (message: Message) => {
+      let conversationId = selectedConversation?.id;
+
+      if (!conversationId) {
+        const newConversation = await new Promise<Conversation>(
+          (resolve, reject) => {
+            createConversation(undefined, {
+              onSuccess: (data) => resolve(data),
+              onError: (error) => reject(error),
+            });
+          }
+        );
+
+        conversationId = newConversation.id;
+
+        setSelectedConversation(newConversation);
+      }
+
       return axios
         .post<{ messageId: number }>("/api/message", {
-          conversationId: selectedConversation?.id,
-          input: input,
+          conversationId,
+          input,
         })
         .then((res) => res.data);
     },
@@ -37,6 +61,11 @@ const useAddMessage = (selectedConversation, input, onAdd: () => void) => {
       onAdd();
     },
   });
+
+  return {
+    ...mutation,
+    isLoading: mutation.isLoading,
+  };
 };
 
 export default useAddMessage;

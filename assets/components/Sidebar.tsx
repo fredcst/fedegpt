@@ -3,61 +3,17 @@ import GetUser from "./GetUser";
 import axios from "axios";
 import { Conversation, Message, ConnectedUser } from "../Interfaces";
 import useGetConversations from "../hooks/useGetConversations";
+import { useConversations } from "../hooks/useConversations";
 
 interface Props {
-  setMessages: (messages: Message[]) => void;
-  conversations: Conversation[];
-  setConversations: (conversations: Conversation[]) => void;
   selectedConversation: Conversation | null;
-  setSelectedConversation: (conversation: Conversation | null) => void; // Allow `null`
+  setSelectedConversation: (conversation: Conversation | null) => void;
 }
 
-const Sidebar = ({
-  setMessages,
-  conversations,
-  setConversations,
-  setSelectedConversation,
-  selectedConversation,
-}: Props) => {
-  const { data } = useGetConversations();
+const Sidebar = ({ setSelectedConversation, selectedConversation }: Props) => {
+  const { data: conversations } = useGetConversations();
 
-  const loadMessages = (conversationId: number) => {
-    axios
-      .get<Message[]>(`/api/v2/conversations/${conversationId}/messages`)
-      .then((response) => {
-        setMessages(response.data);
-      });
-  };
-
-  const createConversation = () => {
-    axios
-      .post<Conversation>("/api/conversation", {})
-      .then((response) => {
-        if (response.data.id) {
-          setConversations([...conversations, response.data]);
-          setSelectedConversation(response.data);
-          loadMessages(response.data.id);
-        }
-      })
-      .catch((error) => {
-        console.error("Error creating conversation:", error);
-        // Handle error (e.g., show a notification or alert)
-      });
-  };
-
-  const deleteConversation = (conversationId: number) => {
-    axios
-      .delete(`/api/v2/conversations/${conversationId}`)
-      .then(() => {
-        setConversations(conversations.filter((c) => c.id !== conversationId));
-        setMessages([]); // Clear messages if the selected conversation was deleted
-        setSelectedConversation(null); // Deselect the conversation
-      })
-      .catch((error) => {
-        console.error("Error deleting conversation:", error);
-        // Handle error (e.g., show a notification or alert)
-      });
-  };
+  const { createConversation, deleteConversation } = useConversations();
 
   return (
     <div
@@ -71,14 +27,15 @@ const Sidebar = ({
       <h2>Hello !</h2>
       <GetUser />
       <h3>Conversations</h3>
-      <button onClick={createConversation}>Start New Conversation</button>
+      <button onClick={() => createConversation()}>
+        Start New Conversation
+      </button>
       <ul>
-        {data?.map((conversation) => (
+        {conversations?.map((conversation) => (
           <li key={conversation.id}>
             <span
               onClick={() => {
                 setSelectedConversation(conversation);
-                loadMessages(conversation.id);
               }}
               style={{
                 cursor: "pointer",

@@ -10,8 +10,8 @@ const fetchConversations = async () => {
 };
 
 // Create Conversation
-const createConversation = async () => {
-  const response = await axios.post("/api/conversation", {});
+const createConversation = async (): Promise<Conversation> => {
+  const response = await axios.post<Conversation>("/api/conversation", {});
   return response.data;
 };
 

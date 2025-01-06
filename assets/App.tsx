@@ -6,14 +6,9 @@ import Sidebar from "./components/Sidebar";
 import { ConnectedUser, Conversation, Message } from "./Interfaces";
 
 function App() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
-  const [loading, setLoading] = useState<boolean>(false);
-
   const [connectedUser, setConnectedUser] = useState<ConnectedUser | null>(
     null
   );
@@ -39,17 +34,14 @@ function App() {
   return (
     <div style={{ display: "flex" }}>
       <Sidebar
-        conversations={conversations}
-        setConversations={setConversations}
         selectedConversation={selectedConversation}
         setSelectedConversation={setSelectedConversation}
-        setMessages={setMessages}
       />
-      <Chatbox
-        messages={messages}
+      <Chatbox selectedConversation={selectedConversation} />
+      <ChatInput
         selectedConversation={selectedConversation}
+        setSelectedConversation={setSelectedConversation}
       />
-      <ChatInput selectedConversation={selectedConversation} />
       {/* Mostrar errores */}
       {error && (
         <div style={{ color: "red", marginTop: "20px" }}>

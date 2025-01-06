@@ -5,42 +5,49 @@ import { Conversation } from "../Interfaces";
 
 interface Props {
   selectedConversation: Conversation | null;
+  setSelectedConversation: (conversation: Conversation) => void;
 }
 
-const ChatInput = ({ selectedConversation }: Props) => {
+const ChatInput = ({
+  selectedConversation,
+  setSelectedConversation,
+}: Props) => {
   const [input, setInput] = useState<string>("");
 
-  const queryClient = useQueryClient();
-
-  const addMessage = useAddMessage(selectedConversation, input, () => {
-    setInput("");
-  });
+  const {
+    mutate: addMessage,
+    isLoading,
+    error,
+  } = useAddMessage(
+    selectedConversation,
+    input,
+    () => {
+      setInput("");
+    },
+    setSelectedConversation
+  );
 
   return (
     <>
-      {addMessage.error && <p>{addMessage.error.message}</p>}
+      {/* {addMessage && <p>{error.message}</p>} */}
       <div style={{ width: "30%", padding: "10px" }}>
-        {selectedConversation ? (
-          <div>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message"
-            />
-            <button
-              onClick={() => {
-                addMessage.mutate({
-                  input: input,
-                  output: "",
-                });
-              }}
-            >
-              Submit
-            </button>
-          </div>
-        ) : (
-          <p>Select a conversation to send a message</p>
-        )}
+        <div>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message"
+          />
+          <button
+            onClick={() => {
+              addMessage({
+                input: input,
+                output: "",
+              });
+            }}
+          >
+            Submit
+          </button>
+        </div>
       </div>
     </>
   );

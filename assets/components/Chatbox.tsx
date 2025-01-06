@@ -3,13 +3,11 @@ import { Conversation, Message, ConnectedUser } from "../Interfaces";
 import useMessages from "../hooks/useMessages";
 
 interface Props {
-  messages: Message[];
   selectedConversation: Conversation | null;
 }
 
-const Chatbox = ({ messages, selectedConversation }: Props) => {
+const Chatbox = ({ selectedConversation }: Props) => {
   const { data, isLoading, isError } = useMessages(selectedConversation?.id);
-  if (isLoading && selectedConversation) return <p>Loading</p>;
   return (
     <div
       style={{
