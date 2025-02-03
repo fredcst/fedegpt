@@ -1,55 +1,102 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import Chatbox from "./components/Chatbox";
-import ChatInput from "./components/ChatInput";
-import Sidebar from "./components/Sidebar";
-import { ConnectedUser, Conversation, Message } from "./Interfaces";
+import React, { useState } from "react";
+import { useConversationStore } from "./hooks/conversations/useConversationStore";
+import useGetConversations from "./hooks/conversations/useGetConversations";
+import useGetMessages from "./hooks/messages/useGetMessages";
+import useAddConversation from "./hooks/conversations/useAddConversation";
+import useAddMessage from "./hooks/messages/useAddMessage";
+import useSaveMessage from "./hooks/messages/useSaveMessage";
+import useDeleteConversation from "./hooks/conversations/useDeleteConversation";
 
-function App() {
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation | null>(null);
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
-  const [connectedUser, setConnectedUser] = useState<ConnectedUser | null>(
-    null
-  );
+const App = () => {
+  const [input, setInput] = useState("");
+  const { selectedConversation, setSelectedConversation } =
+    useConversationStore();
+  const { data: conversations } = useGetConversations();
+  const { data: messages } = useGetMessages(selectedConversation?.id);
+  const addConversation = useAddConversation();
+  const addMessage = useAddMessage();
+  const saveMessage = useSaveMessage();
 
-  useEffect(() => {
-    const fetchConnectedUser = async () => {
-      try {
-        const response = await axios.get<ConnectedUser>("/api/me");
-        setConnectedUser({
-          name: response.data.name,
-          lastName: response.data.lastName,
-          uid: response.data.uid,
-        });
-        setError(null); // Limpiar el error si la solicitud fue exitosa
-      } catch (error) {
-        setError("Error fetching conversations"); // Guardar el error
-      }
-    };
-
-    fetchConnectedUser();
-  }, []);
+  const handleSend = () => {
+    if (!selectedConversation) {
+      addConversation.mutate(undefined, {
+        onSuccess: (newConversation) => {
+          sendMessage(newConversation.id);
+        },
+      });
+    } else {
+      console.log("sendMessageSelectedConversation");
+      sendMessage(selectedConversation.id);
+    }
+  };
+  
+  const sendMessage = async (conversationId: number | undefined) => {
+    if (!conversationId) return;
+    addMessage.mutate({
+      message: { id: -1, input, output: "" },
+      conversationId: conversationId,
+    });
+  
+    const output = await new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve("lorem ipsum dolor sit amet, consectetur adip");
+      }, 3000);
+    });
+  
+    const newId = Math.random(); 
+    saveMessage.mutate({
+      message: { id: newId, input: input, output: output },
+      conversationId,
+      numb: newId, 
+    });
+  };
 
   return (
-    <div style={{ display: "flex" }}>
-      <Sidebar
-        selectedConversation={selectedConversation}
-        setSelectedConversation={setSelectedConversation}
-      />
-      <Chatbox selectedConversation={selectedConversation} />
-      <ChatInput
-        selectedConversation={selectedConversation}
-        setSelectedConversation={setSelectedConversation}
-      />
-      {/* Mostrar errores */}
-      {error && (
-        <div style={{ color: "red", marginTop: "20px" }}>
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-    </div>
+    <>
+      <button onClick={() => addConversation.mutate()}>New conversation</button>
+      <button onClick={() => setSelectedConversation()}>
+        Deselect conversation
+      </button>
+      {conversations &&
+        conversations.map((conv, index) => (
+          <span key={index}>
+            <span
+              onClick={() => setSelectedConversation(conv)}
+              style={{ paddingRight: "20px" }}
+            >
+              {conv.id} : {conv.createdAt}
+            </span>
+            <span>
+                {/* <button onClick={() => deleteConversation.mutate(conv.id)}>
+                  Delete
+                </button> */}
+              </span>
+            </span>
+        ))}
+      <hr></hr>
+      <span>
+        {selectedConversation && (
+          <h4>Selected Conversation : {selectedConversation.createdAt}</h4>
+        )}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button onClick={handleSend}>Send</button>
+      </span>
+      <div>
+        {messages &&
+          messages.map((message, index) => (
+            <div key={index} style={{ display: "flex", gap: "30px" }}>
+              <span>Message ID : {message.id}</span>
+              <span>INPUT : {message.input}</span>
+              <span>OUTPUT: {message.output}</span>
+            </div>
+          ))}
+      </div>
+    </>
   );
-}
+};
 
 export default App;

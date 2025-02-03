@@ -28,10 +28,8 @@ class Message
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $output = null;
 
-    public function __construct(string $input, Conversation $conversation)
+    public function __construct()
     {
-        $this->input = $input;
-        $this->conversation = $conversation;
         $this->createdAt = new \DateTimeImmutable();
     }
 

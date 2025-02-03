@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Conversation } from "../Interfaces";
 import axios from "axios";
+import { Conversation } from "../../Interfaces";
 
 const useGetConversations = () => {
-  const fetchConversations = () => {
-    return axios
-      .get<Conversation[]>("/api/v2/conversations")
-      .then((res) => res.data);
-  };
+  const fetchConversations = () =>
+    axios.get<Conversation[]>("/api/v2/conversations").then((res) => res.data);
 
-  return useQuery<Conversation[]>({
+  return useQuery({
     queryKey: ["conversations"],
     queryFn: fetchConversations,
   });

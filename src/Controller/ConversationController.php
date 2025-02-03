@@ -8,13 +8,12 @@ use App\Repository\ConversationRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\BrowserKit\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConversationController extends AbstractController
 {
@@ -38,31 +37,77 @@ class ConversationController extends AbstractController
     }
 
     #[Route('/api/message', name: 'create_message', methods: ['POST'])]
-    public function createMessage(HttpFoundationRequest $request, EntityManagerInterface $entityManager, ConversationRepository $conversationRepository): JsonResponse
+    public function createMessage(HttpFoundationRequest $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $conversationId = $data['conversationId'] ?? null;
         $input = $data['input'] ?? '';
-
+        $output = $data['output'] ?? '';
+    
         if (!$conversationId || !$input) {
             return new JsonResponse(['error' => 'Invalid input or conversation ID'], 400);
         }
-
-        // Buscar la conversación por ID
-        $conversation = $conversationRepository->find($conversationId);
+    
+        $conversation = $entityManager->getRepository(Conversation::class)->find($conversationId);
+        
         if (!$conversation) {
             return new JsonResponse(['error' => 'Conversation not found'], 404);
         }
-
-        // Crear nuevo mensaje
-        $message = new Message($input, $conversation);
+    
+        // Crear un nuevo mensaje y asociarlo con la conversación
+        $message = new Message();
+        $message->setInput($input);
+        $message->setOutput($output);
+        $message->setConversation($conversation);
         $entityManager->persist($message);
         $entityManager->flush();
-
+    
         return new JsonResponse([
-            'messageId' => $message->getId(),
+            'conversationId' => $conversation->getId(),
+            'id' => $message->getId(),
             'input' => $message->getInput(),
+            'output' => $message->getOutput(),
+            'createdAt' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
         ]);
+    }
+
+    #[Route('/api/message_stream', name: 'create_message_stream', methods: ['GET'])]
+    public function createMessageStram(HttpFoundationRequest $request): StreamedResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $conversationId = $data['conversationId'] ?? null;
+        $input = $data['input'] ?? '';
+    
+        if (!$conversationId || !$input) {
+            return new StreamedResponse(function () {
+                echo json_encode(['error' => 'Invalid input or conversation ID']);
+            }, 400);
+        }
+    
+        $client = HttpClient::create();
+    
+        // Configurar la respuesta streameada para enviar datos en tiempo real
+        $streamedResponse = new StreamedResponse(function () use ($client) {
+            try {
+                // Realizar la solicitud al servidor Node.js
+                $response = $client->request('GET', 'http://localhost:4000/');
+                $stream = $client->stream($response);
+    
+                foreach ($stream as $chunk) {
+                    echo $chunk->getContent(); // Enviar contenido del chunk al cliente
+                    ob_flush();
+                    flush(); // Forzar el envío del contenido al cliente
+                }
+            } catch (\Exception $e) {
+                echo json_encode(['error' => 'Error streaming from server: ' . $e->getMessage()]);
+            }
+        });
+    
+        // Configurar las cabeceras necesarias para la respuesta streameada
+        $streamedResponse->headers->set('Content-Type', 'text/plain');
+        $streamedResponse->headers->set('Transfer-Encoding', 'chunked');
+    
+        return $streamedResponse;
     }
 
     #[Route('/api/v2/conversations', name: 'get_conversations', methods: ['GET'])]

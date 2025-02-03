@@ -7,6 +7,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import "./app.css";
 
 const queryClient = new QueryClient();
+queryClient.setDefaultOptions({
+  placeholderData: (prev) => prev,
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

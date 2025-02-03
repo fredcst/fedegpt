@@ -46,6 +46,7 @@ class MessageController extends AbstractController
         $response = [];
         foreach ($messages as $message) {
             $response[] = [
+                'id' => $message->getId(),
                 'input' => $message->getInput(),
                 'output' => $message->getOutput(),
             ];
