@@ -38,3 +38,9 @@ class NotFoundListener
         $event->setResponse($response);
     }
 }
+
+services:
+    App\EventListener\NotFoundListener:
+        arguments: ['@twig']
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
